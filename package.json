@@ -1,0 +1,15 @@
+{
+  "name": "suri_cli",
+  "version": "1.0.0",
+  "description": "SURI CLI application for wallet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ben Smithers",
+  "license": "ISC",
+  "dependencies": {
+    "@orbitdb/core": "^2.1.0",
+    "helia": "^4.0.1"
+  }
+}
