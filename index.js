@@ -5,12 +5,12 @@ import chalkAnimation from 'chalk-animation'
 import inquirer from 'inquirer'
 import figlet from 'figlet'
 import gradient from 'gradient-string'
-import { home, sigscreen, resetdb } from './components/screens.js'
+import { home } from './components/screens.js'
 
 
 async function welcome() {
   console.clear()
-  console.log('Welcome to SURI')
+  console.log(chalk.redBright('Welcome to SURI CLI'))
   console.log(chalk.green('Please provide a username for your Identity:'))
   const username = await inquirer.prompt([
       {
@@ -28,6 +28,6 @@ await home(username.username)
 
 
 process.on('SIGINT', async () => {
-  console.log("exiting...")
+  console.clear()
   process.exit(0)
 })
