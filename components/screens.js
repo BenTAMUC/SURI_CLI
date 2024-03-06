@@ -3,59 +3,56 @@ import chalkAnimation from 'chalk-animation'
 import inquirer from 'inquirer'
 import figlet from 'figlet'
 import gradient from 'gradient-string'
-import { username } from '../index.js'
+//import { username } from '../index.js'
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-async function home(username) {
+async function welcome() {
     console.clear()
-    console.log(username + 's SURI CLI Home Screen')
-    const choice = await inquirer.prompt([
+    console.log(chalk.redBright('Welcome to SURI CLI'))
+    console.log(chalk.green('Please provide a username for your Identity:'))
+    const username = await inquirer.prompt([
         {
-            type: 'list',
-            name: 'choice',
-            message: 'Select an option',
-            choices: ['Sigchain', 'Reset']
-        }
+          type: 'input',
+          name: 'username',
+          message: 'What is your Username?',
+      }
     ])
-    if (choice.choice === 'Sigchain') {
-        await sigscreen()
-    } else if (choice.choice === 'Reset') {
-        await resetdb()
-    }
+    return username
 }
 
-async function sigscreen() {
+async function home(username, sigchain, address) {
     console.clear()
-    console.log('Sigchain Screen')
+    console.log(username + 's SURI CLI Home Screen')
+    console.log('Your OrbitDB Address: ' + address)
+    console.log('Your Sigchain:')
+    console.log(sigchain)
+    console.log('Below are options to interact with your Sigchain')
     const choice = await inquirer.prompt([
         {
             type: 'list',
             name: 'choice',
-            message: 'Sigchain Functions',
-            choices: ['Social Proof', 'New Keys', 'Revoke', 'View SC', 'Home']
+            message: 'What would you like to do?',
+            choices: ['Add Social Identity', 'Add Keys', 'Revoke', 'Reset']
         }
     ])
-    if (choice.choice === 'Home') {
-        await home(username.username)
-    }
-    else if (choice.choice === 'Social Proof') {
+    if (choice.choice === 'Add Social Identity') {
         const msg = 'Social Proof Added!'
         figlet(msg, (err, data) => {
           console.log(gradient.summer.multiline(data))
         })
         await sleep(3000)
         console.clear()
-        await sigscreen()
+        await home()
     }
-    else if (choice.choice === 'New Keys') {
+    else if (choice.choice === 'Add Keys') {
         const msg = 'New Keys Added!'
         figlet(msg, (err, data) => {
           console.log(gradient.summer.multiline(data))
         })
         await sleep(3000)
         console.clear()
-        await sigscreen()
+        await home()
     }
     else if (choice.choice === 'Revoke') {
         const msg = 'Sigchain Link Revoked!'
@@ -64,17 +61,11 @@ async function sigscreen() {
         })
         await sleep(3000)
         console.clear()
-        await sigscreen()
-    }
-    else if (choice.choice === 'View SC') {
-        const msg = 'Imagine a SigChain!'
-        figlet(msg, (err, data) => {
-          console.log(gradient.summer.multiline(data))
-        })
-        await sleep(3000)
-        console.clear()
-        await sigscreen()
+        await home()
     } 
+    else if (choice.choice === 'Reset') {
+        await resetdb()
+    }
 }
 
 async function resetdb() {
@@ -93,10 +84,10 @@ async function resetdb() {
         })
         await sleep(3000)
         console.clear()
-        await home(username.username)
+        await home()
     } else {
-        await home(username.username)
+        await home()
     }
 }
 
-export { home, sigscreen, resetdb }
+export { home, resetdb, welcome, sleep }
