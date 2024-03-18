@@ -14,64 +14,75 @@ import { LevelBlockstore } from 'blockstore-level'
 import { home, welcome, sleep } from './components/screens.js'
 import { libp2pOptions } from './components/libp2p.js'
 
+let db
+let orbitdb
+let ipfs 
+let identity
+let id
+let keystore
+
 if (process.argv.length > 2) {
-  const id = process.argv.pop()
+  id = process.argv.pop()
+
+  keystore = await KeyStore()
 
   const seed = new Uint8Array(32)
   const blockstore = new LevelBlockstore(`./ipfs/${id}`)
 
   const libp2p = await createLibp2p(libp2pOptions)
   
-  const ipfs = await createHelia({ libp2p, blockstore })
+  ipfs = await createHelia({ libp2p, blockstore })
   OrbitDBIdentityProviderDID.setDIDResolver(KeyDiDResolver.getResolver())
   useIdentityProvider(OrbitDBIdentityProviderDID)
 
   const didProvider = new Ed25519Provider(seed)
 
-  const identities = await Identities({ ipfs })
-  const identity = await identities.createIdentity({ provider: OrbitDBIdentityProviderDID({ didProvider })})
+  const identities = await Identities({ ipfs, keystore })
+  identity = await identities.createIdentity({ provider: OrbitDBIdentityProviderDID({ didProvider })})
 
-  const orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: `./orbitdb/${id}` })
+  orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: `./orbitdb/${id}` })
 
-  const db = await orbitdb.open('sigchain', { Database: Documents({ indexBy: 'seqno'})})
+  db = await orbitdb.open('test1', { Database: Documents({ indexBy: 'seqno'})})
 
-  await home(id, await db.all(),  await db.address.toString())
+  await home(id, (await db.all()).map(e => e.value),  await db.address.toString())
 
 } else {
-  const id = await welcome()
+  id = await welcome()
+
+  keystore = await KeyStore()
 
   const seed = new Uint8Array(32)
-  const blockstore = new LevelBlockstore(`./ipfs/${id.username}`)
+  const blockstore = new LevelBlockstore(`./ipfs/${id.display_name}`)
 
   const libp2p = await createLibp2p(libp2pOptions)
   
-  const ipfs = await createHelia({ libp2p, blockstore })
+  ipfs = await createHelia({ libp2p, blockstore })
   OrbitDBIdentityProviderDID.setDIDResolver(KeyDiDResolver.getResolver())
   useIdentityProvider(OrbitDBIdentityProviderDID)
 
   const didProvider = new Ed25519Provider(seed)
 
-  const identities = await Identities({ ipfs })
-  const identity = await identities.createIdentity({ provider: OrbitDBIdentityProviderDID({ didProvider })})
+  const identities = await Identities({ ipfs, keystore })
+  identity = await identities.createIdentity({ provider: OrbitDBIdentityProviderDID({ didProvider })})
 
-  const orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: `./orbitdb/${id.username}` })
-  const db = await orbitdb.open('sigchain', { Database: Documents({ indexBy: 'seqno'})})
+  orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: `./orbitdb/${id.display_name}` })
+  db = await orbitdb.open('test1', { Database: Documents({ indexBy: 'seqno'})})
 
-  await db.put({  "@context": [
-    "https://www.w3.org/ns/credentials/v2",
-    "https://www.w3.org/ns/credentials/examples/v2"
-  ],
-  "id": identity.id,
-  "type": ["VerifiableCredential", "EldestKeyCredential"],
-  "issuer": "https://university.example/issuers/14",
-  "validFrom": "2010-01-01T19:23:24Z",
-  "seqno": 1,
-  "keyid": identity.publicKey,
+  await db.put({ 
+        "key": {
+            "eldest_kid": identity.id,
+            "kid": identity.id,
+            "uid": await db.address.toString(),
+            "display_name": id.display_name
+        },
+        "type": "eldest",
+        "validFrom": new Date().toISOString(),
+        "seqno": 1,
+        "prev": "null"
 })
 
-  await home(id.username, await db.all(), await db.address.toString())
+  await home(id.username, (await db.all()).map(e => e.value), await db.address.toString())
 }
-
 
 process.on('SIGINT', async () => {
   console.log('exiting...')
@@ -80,3 +91,5 @@ process.on('SIGINT', async () => {
   await ipfs.stop()
   process.exit(0)
 })
+
+export { db, orbitdb, ipfs, identity, id, keystore}

@@ -3,19 +3,20 @@ import chalkAnimation from 'chalk-animation'
 import inquirer from 'inquirer'
 import figlet from 'figlet'
 import gradient from 'gradient-string'
-//import { username } from '../index.js'
+import { db, orbitdb, ipfs, identity, id } from '../index.js'
+import { socialProof, revoke, addKeys } from './sigchain.js'
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 async function welcome() {
     console.clear()
     console.log(chalk.redBright('Welcome to SURI CLI'))
-    console.log(chalk.green('Please provide a username for your Identity:'))
+    console.log(chalk.green('Please provide a display name for your Identity:'))
     const username = await inquirer.prompt([
         {
           type: 'input',
-          name: 'username',
-          message: 'What is your Username?',
+          name: 'display_name',
+          message: 'What is your Display Name?',
       }
     ])
     return username
@@ -37,31 +38,13 @@ async function home(username, sigchain, address) {
         }
     ])
     if (choice.choice === 'Add Social Identity') {
-        const msg = 'Social Proof Added!'
-        figlet(msg, (err, data) => {
-          console.log(gradient.summer.multiline(data))
-        })
-        await sleep(3000)
-        console.clear()
-        await home()
+        await socialProof()
     }
     else if (choice.choice === 'Add Keys') {
-        const msg = 'New Keys Added!'
-        figlet(msg, (err, data) => {
-          console.log(gradient.summer.multiline(data))
-        })
-        await sleep(3000)
-        console.clear()
-        await home()
+        await addKeys()
     }
     else if (choice.choice === 'Revoke') {
-        const msg = 'Sigchain Link Revoked!'
-        figlet(msg, (err, data) => {
-          console.log(gradient.summer.multiline(data))
-        })
-        await sleep(3000)
-        console.clear()
-        await home()
+        await revoke()
     } 
     else if (choice.choice === 'Reset') {
         await resetdb()
@@ -89,5 +72,13 @@ async function resetdb() {
         await home()
     }
 }
+
+process.on('SIGINT', async () => {
+    console.log('exiting...')
+    await db.close()
+    await orbitdb.stop()
+    await ipfs.stop()
+    process.exit(0)
+  })
 
 export { home, resetdb, welcome, sleep }

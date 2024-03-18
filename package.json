@@ -29,6 +29,7 @@
     "key-did-resolver": "^4.0.0",
     "orbit-db-identity-provider": "^0.5.0",
     "orbitdb": "^0.0.1-security",
-    "prompt-sync": "^4.2.0"
+    "prompt-sync": "^4.2.0",
+    "web-did-resolver": "^2.0.27"
   }
 }
