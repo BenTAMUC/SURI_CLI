@@ -6,8 +6,10 @@ import gradient from 'gradient-string'
 import { db, orbitdb, ipfs, identity, id } from '../index.js'
 import { socialProof, revoke, addKeys } from './sigchain.js'
 
+// Sleep timer for brief pauses for user to read console output
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
+// Welcome screen for the user to input their display name
 async function welcome() {
     console.clear()
     console.log(chalk.redBright('Welcome to SURI CLI'))
@@ -22,6 +24,7 @@ async function welcome() {
     return username
 }
 
+// Home screen for the user to interact with their Sigchain
 async function home(username, sigchain, address) {
     console.clear()
     console.log(username + 's SURI CLI Home Screen')
@@ -51,6 +54,7 @@ async function home(username, sigchain, address) {
     }
 }
 
+// Reset the database, work in progress
 async function resetdb() {
     console.clear()
     const conf = await inquirer.prompt([

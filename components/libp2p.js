@@ -5,6 +5,8 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { noise } from '@chainsafe/libp2p-noise'
 import { identify } from '@libp2p/identify'
 
+// These are the options for the libp2p node
+
 export const libp2pOptions = {
     peerDiscovery: [
       mdns()

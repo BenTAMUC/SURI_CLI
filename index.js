@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 // On first launch of app, enter node index.js in command line to start new DB/SC
-// Whenever launching app after first launch, append your username to the command line input:
+// Whenever launching app after first launch, append your display name to the command line input:
 // example: node index.js Rekkla
 
 import { createHelia } from 'helia'
@@ -14,13 +14,19 @@ import { LevelBlockstore } from 'blockstore-level'
 import { home, welcome, sleep } from './components/screens.js'
 import { libp2pOptions } from './components/libp2p.js'
 
-let db
+let db 
 let orbitdb
 let ipfs 
 let identity
 let id
 let keystore
 
+/*
+The following if else blocks are for the initial launch of the app.
+The if block will set up an orbitdb database and identity for the user, as well as the first sigchain link for the eldest key.
+Every subsequent launch of the app requires the user to append there display name so that a new eldest key sigchain link is not 
+created and submitted to the database.
+*/
 if (process.argv.length > 2) {
   id = process.argv.pop()
 
@@ -83,6 +89,8 @@ if (process.argv.length > 2) {
 
   await home(id.username, (await db.all()).map(e => e.value), await db.address.toString())
 }
+
+// This block is for handling the SIGINT signal, which is sent to the process when the user presses ctrl+c, ending the process.
 
 process.on('SIGINT', async () => {
   console.log('exiting...')
