@@ -5,14 +5,15 @@
 // example: node index.js Rekkla
 
 import { createHelia } from 'helia'
-import { createOrbitDB, Identities, useIdentityProvider, Documents, KeyStore } from '@orbitdb/core'
+import { createOrbitDB, Identities, useIdentityProvider, Documents, KeyStore, OrbitDBAccessController, KeyValue } from '@orbitdb/core'
 import OrbitDBIdentityProviderDID from '@orbitdb/identity-provider-did'
 import KeyDiDResolver from 'key-did-resolver'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { createLibp2p } from 'libp2p'
 import { LevelBlockstore } from 'blockstore-level'
-import { home, welcome, sleep } from './components/screens.js'
+import { home } from './components/screens.js'
 import { libp2pOptions } from './components/libp2p.js'
+import inquirer from 'inquirer'
 
 let db 
 let orbitdb
@@ -20,6 +21,7 @@ let ipfs
 let identity
 let id
 let keystore
+let identities
 
 /*
 The following if else blocks are for the initial launch of the app.
@@ -28,12 +30,11 @@ Every subsequent launch of the app requires the user to append there display nam
 created and submitted to the database.
 */
 if (process.argv.length > 2) {
-  id = process.argv.pop()
+  const address = process.argv.pop()
 
   keystore = await KeyStore()
-
   const seed = new Uint8Array(32)
-  const blockstore = new LevelBlockstore(`./ipfs/${id}`)
+  const blockstore = new LevelBlockstore('./ipfs/blocks')
 
   const libp2p = await createLibp2p(libp2pOptions)
   
@@ -43,22 +44,63 @@ if (process.argv.length > 2) {
 
   const didProvider = new Ed25519Provider(seed)
 
-  const identities = await Identities({ ipfs, keystore })
+  identities = await Identities({ ipfs, keystore })
   identity = await identities.createIdentity({ provider: OrbitDBIdentityProviderDID({ didProvider })})
+  id = identity.id  
 
-  orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: `./orbitdb/${id}` })
+  orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: './orbitdb/didorbit'})
 
-  db = await orbitdb.open('test1', { Database: Documents({ indexBy: 'seqno'})})
+  db = await orbitdb.open(address, { Database: Documents({ indexBy: 'id'})}, { AccessController: OrbitDBAccessController({ write: [identity.id]})})
 
-  await home(id, (await db.all()).map(e => e.value),  await db.address.toString())
+  let context = await db.get('did:orbit:'+ db.address.toString())
+  context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
+  context = JSON.parse(context)
+
+  await home(identity.id, context,  await db.address.toString())
 
 } else {
-  id = await welcome()
+
+  console.clear()
+  console.log('Welcome to DID Orbit CLI')
+  let knownAs = await inquirer.prompt([
+      {
+          type: 'input',
+          name: 'knownAs',
+          message: 'Please provide a Social Media Profile Link',
+    }
+  ])
+  knownAs = knownAs.knownAs
+
+  let serviceID = await inquirer.prompt([
+    {
+        type: 'input',
+        name: 'serviceID',
+        message: 'Please provide Service ID',
+    }
+  ])
+  serviceID = serviceID.serviceID
+
+  let serviceType = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'serviceType',
+      message: 'Please provide Service Type',
+  }
+  ])
+  serviceType = serviceType.serviceType
+
+  let serviceEndpoint = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'serviceEndpoint',
+      message: 'Please provide Service Endpoint',
+  }
+  ])
+  serviceEndpoint = serviceEndpoint.serviceEndpoint
 
   keystore = await KeyStore()
-
   const seed = new Uint8Array(32)
-  const blockstore = new LevelBlockstore(`./ipfs/${id.display_name}`)
+  const blockstore = new LevelBlockstore('./ipfs/blocks')
 
   const libp2p = await createLibp2p(libp2pOptions)
   
@@ -68,26 +110,45 @@ if (process.argv.length > 2) {
 
   const didProvider = new Ed25519Provider(seed)
 
-  const identities = await Identities({ ipfs, keystore })
+  identities = await Identities({ ipfs, keystore })
   identity = await identities.createIdentity({ provider: OrbitDBIdentityProviderDID({ didProvider })})
+  id = identity.id
 
-  orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: `./orbitdb/${id.display_name}` })
-  db = await orbitdb.open('test1', { Database: Documents({ indexBy: 'seqno'})})
+  orbitdb = await createOrbitDB({ ipfs, identities, identity, directory: './orbitdb/didorbit' })
+  db = await orbitdb.open('papa', { Database: Documents({ indexBy: 'id'})}, { AccessController: OrbitDBAccessController({ write: [identity.id]})})
 
-  await db.put({ 
-        "key": {
-            "eldest_kid": identity.id,
-            "kid": identity.id,
-            "uid": await db.address.toString(),
-            "display_name": id.display_name
-        },
-        "type": "eldest",
-        "validFrom": new Date().toISOString(),
-        "seqno": 1,
-        "prev": "null"
-})
+  let jsonDocument = {
+    '@context': [
+      'https://www.w3.org/ns/did/v1',
+      'https://w3id.org/security/multikey/v1',
+      'https://w3id.org/security/suites/ecdsa-2019/v1'
+    ],
+    'id': 'did:orbit:'+ db.address.toString(),
+    'alsoKnownAs': [knownAs],
+    'verificationMethod': [
+      {
+        'id': '#atproto',
+        'type': 'Multikey',
+        'controller': 'did:orbit:'+ db.address.toString(),
+        'publicKeyMultibase': id
+      }
+    ],
+    'service': [
+      {
+        'id': serviceID,
+        'type': serviceType,
+        'serviceEndpoint': serviceEndpoint
+      }
+    ]
+  };
 
-  await home(id.username, (await db.all()).map(e => e.value), await db.address.toString())
+  await db.put(jsonDocument)
+
+  let context = await db.get('did:orbit:'+ db.address.toString())
+  context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
+  context = JSON.parse(context)
+
+  await home(identity.id, context, await db.address.toString())
 }
 
 // This block is for handling the SIGINT signal, which is sent to the process when the user presses ctrl+c, ending the process.
@@ -100,4 +161,4 @@ process.on('SIGINT', async () => {
   process.exit(0)
 })
 
-export { db, orbitdb, ipfs, identity, id, keystore}
+export { db, orbitdb, ipfs, identity, id, keystore, identities}
