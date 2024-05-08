@@ -2,8 +2,7 @@
 
 DID Orbit CLI is an application that allows a user to create and manage a did:orbit identity through an orbitdb database
 
-DID Orbit CLI takes advantage of Orbitdb, a decentralized, serverless, peer-to-peer database.
-https://orbitdb.org/
+DID Orbit CLI takes advantage of [Orbitdb](https://orbitdb.org/), a decentralized, serverless, peer-to-peer database. OrbitDB is built on top of of [IPFS](https://ipfs.tech/), which is a decentralized network which allows for the distribution and storing of data.
 
 ## Dependancies
 
@@ -39,3 +38,6 @@ Delete will provide the following options
 - Delete Web Services
 
 Simply follow the prompts when completing these functions
+
+## Ensuring data integrity and non-repudiation
+In order to ensure that the data recieved from OrbitDB is not tampered with and traceable back to the DB owner the OrbitDB OpLog can be used. The OpLog stores the metadata of any operation in the database including the signature of added blocks, previous hash pointers, and the key being used to create the block. Using the information in the OpLog we can validate any block contained in the database for its integrity and trace its creation back to the database owner through the usage of the owners key in the blocks creation. (Example Code Coming Soon)
