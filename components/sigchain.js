@@ -6,6 +6,7 @@ import { home, sleep } from './screens.js'
 import inquirer from 'inquirer'
 
 export async function socialProof(){
+    // takes a social medial link and pushes it to the alsoKnownAs array
     console.clear()
     const choice = await inquirer.prompt([
         {
@@ -26,12 +27,12 @@ export async function socialProof(){
         ])
         url = url.url
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         let context = await db.get('did:orbit:'+ string)
         // parse did doc json from db and make sure it is in the correct order/format
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
         context = JSON.parse(context)
-        context.alsoKnownAs.push(url)
+        context.alsoKnownAs.push(url) // add new social proof to alsoKnownAs array
         await db.del('did:orbit:'+ string)
         await db.put(context)
         // Return to home screen
@@ -41,7 +42,7 @@ export async function socialProof(){
     }
     else {
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         let context = await db.get('did:orbit:'+ string)
         // parse did doc json from db and make sure it is in the correct order/format
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
@@ -55,6 +56,7 @@ export async function socialProof(){
 }
 
 export async function addKeys(){
+    // takes a key id, type, controller and pubkeymultibase and pushes it to the verificationMethod array 
     console.clear()
     const choice = await inquirer.prompt([
         {
@@ -89,6 +91,7 @@ export async function addKeys(){
         keyType = keyType.keyType
         // create new verification method object
         const newVM = {}
+        // add keyid and type to object
         newVM.id = keyID
         newVM.type = keyType
 
@@ -100,15 +103,16 @@ export async function addKeys(){
         const seed29 = new Uint8Array(array)
         const didProvider = new Ed25519Provider(seed29)
         const newIdentity = await identities.createIdentity({ provider: OrbitDBIdentityProviderDID({ didProvider })}) 
+        // add controller and public key multibase to new verification method object
         newVM.controller = 'did:orbit:'+ string
         newVM.publicKeyMultibase = newIdentity.id
         let context = await db.get('did:orbit:'+ string)
         // parse did doc json from db and make sure it is in the correct order/format
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
         context = JSON.parse(context)
-        context.verificationMethod.push(newVM)
+        context.verificationMethod.push(newVM) // push new object to did doc
         await db.del('did:orbit:'+ string)
-        await db.put(context)
+        await db.put(context) // replace old did doc with new one
         // Return to home screen
         await sleep(1000)
         console.clear()
@@ -116,7 +120,7 @@ export async function addKeys(){
     }
     else {
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         console.log('Keys Not Added')
         let context = await db.get('did:orbit:'+ string)
         // parse did doc json from db and make sure it is in the correct order/format
@@ -141,6 +145,8 @@ export async function serviceUpdate(){
     ])
 
     if (choice.choice === 'yes'){
+        // create new service object
+        // ask for service id, type and endpoint to be added to the new service object
         const newService = {}
         let serviceID = await inquirer.prompt([
             {
@@ -168,29 +174,30 @@ export async function serviceUpdate(){
             }
         ])
         serviceEndpoint = serviceEndpoint.serviceEndpoint
-
+        
+        // add service id, type and endpoint to new service object
         newService.id = serviceID
         newService.type = serviceType
         newService.serviceEndpoint = serviceEndpoint
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         
-        let context = await db.get('did:orbit:'+ string)
+        let context = await db.get('did:orbit:'+ string) // get did doc from db
         // parse did doc json from db and make sure it is in the correct order/format
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
         context = JSON.parse(context)
         context.service.push(newService)
         await db.del('did:orbit:'+ string)
-        await db.put(context)
+        await db.put(context) // replace old did doc with new one
         // Return to home screen
         await sleep(1000)
         console.clear()
         await home(context, string)
     }
     else {
-        let string = db.address.toString()
+        let string = db.address.toString() // get the address of the db and cut off the /orbitdb/ part
         string = string.substring(9, string.length)
-        let context = await db.get('did:orbit:'+ string)
+        let context = await db.get('did:orbit:'+ string) // get did doc from db
         // parse did doc json from db and make sure it is in the correct order/format
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
         context = JSON.parse(context)
@@ -224,7 +231,7 @@ export async function delSocialProof(){
         url = url.url
 
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         
         let context = await db.get('did:orbit:'+ string)
         // parse did doc json from db and make sure it is in the correct order/format
@@ -232,7 +239,7 @@ export async function delSocialProof(){
         context = JSON.parse(context)
         context.alsoKnownAs = context.alsoKnownAs.filter(e => e !== url)
         await db.del('did:orbit:'+ string)
-        await db.put(context)
+        await db.put(context) // replace old did doc with new one
         // Return to home screen
         await sleep(1000)
         console.clear()
@@ -240,11 +247,11 @@ export async function delSocialProof(){
     }
     else {
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         let context = await db.get('did:orbit:'+ string)
         // parse did doc json from db and make sure it is in the correct order/format
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
-        context = JSON.parse(context)
+        context = JSON.parse(context) // parse did doc json from db and make sure it is in the correct order/format
         console.log('Social Proof Not Added')
         // Return to home screen
         await sleep(1000)
@@ -254,6 +261,7 @@ export async function delSocialProof(){
 }
 
 export async function delKeys(){
+    // takes a key id from user and removes it from the verificationMethod array
     console.clear()
     const choice = await inquirer.prompt([
         {
@@ -276,9 +284,9 @@ export async function delKeys(){
         keyID = keyID.keyID
 
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
 
-        let context = await db.get('did:orbit:'+ string)
+        let context = await db.get('did:orbit:'+ string) // get did doc from db
         // parse did doc json from db and make sure it is in the correct order/format
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
         context = JSON.parse(context)
@@ -306,6 +314,7 @@ export async function delKeys(){
 }  
 
 export async function delService(){
+    // takes serviceid from user input and removes it from the service array
     console.clear()
     const choice = await inquirer.prompt([
         {
@@ -327,7 +336,7 @@ export async function delService(){
         serviceID = serviceID.serviceID
 
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         
         let context = await db.get('did:orbit:'+ string)
         // parse did doc json from db and make sure it is in the correct order/format
@@ -344,10 +353,10 @@ export async function delService(){
     else {
         // Return to home screen
         let string = db.address.toString()
-        string = string.substring(9, string.length)
+        string = string.substring(9, string.length) // get the address of the db and cut off the /orbitdb/ part
         let context = await db.get('did:orbit:'+ string)
         context = JSON.stringify(context.value, ['@context', 'id', 'alsoKnownAs', 'verificationMethod', 'type', 'controller', 'publicKeyMultibase', 'service', 'serviceEndpoint'])
-        context = JSON.parse(context)
+        context = JSON.parse(context) // parse did doc json from db and make sure it is in the correct order/format
         console.log('Social Proof Not Added')
         await sleep(1000)
         console.clear()
