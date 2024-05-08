@@ -1,10 +1,7 @@
 import chalk from 'chalk'
-import chalkAnimation from 'chalk-animation'
 import inquirer from 'inquirer'
-import figlet from 'figlet'
-import gradient from 'gradient-string'
-import { db, orbitdb, ipfs, identity, id } from '../index.js'
-import { socialProof, serviceUpdate, addKeys } from './sigchain.js'
+import { db, orbitdb, ipfs } from '../index.js'
+import { socialProof, serviceUpdate, addKeys, delKeys, delService, delSocialProof } from './sigchain.js'
 
 // Sleep timer for brief pauses for user to read console output
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
@@ -25,14 +22,13 @@ async function welcome() {
 
 }
 
-// Home screen for the user to interact with their Sigchain
-async function home(username, sigchain, address) {
+// Home screen for the user to interact with their did Document
+async function home(didDoc, address) {
     console.clear()
     console.log('DID Orbit CLI Home Screen')
-    console.log('Retain this ID ' + username)
-    console.log('Your OrbitDB Address: ' + address)
-    console.log('Your Sigchain:')
-    console.log(sigchain)
+    console.log('Your DID Orbit ID: ' + 'did:orbit:', address)
+    console.log('Your DID Orbit Document:')
+    console.log(didDoc)
     console.log('Below are options to interact with your Sigchain')
     const cheece = await inquirer.prompt([
         {
@@ -48,10 +44,10 @@ async function home(username, sigchain, address) {
                 type: 'list',
                 name: 'choice',
                 message: 'What would you like to do?',
-                choices: ['Add Social Proof', 'Add Verification Method', 'Add Web Services']
+                choices: ['Add Social Profile', 'Add Verification Method', 'Add Web Services']
             }
         ])
-        if (choice.choice === 'Add Social Proof') {
+        if (choice.choice === 'Add Social Profile') {
             await socialProof()
         }
         else if (choice.choice === 'Add Verification Method') {
@@ -62,7 +58,23 @@ async function home(username, sigchain, address) {
         } 
     }
     else if (cheece.choice === 'Delete') {
-        await del()
+        const choice = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'choice',
+                message: 'What would you like to do?',
+                choices: ['Delete Social', 'Delete Verification Method', 'Delete Web Service']
+            }
+        ])
+        if (choice.choice === 'Delete Social') {
+            await delSocialProof()
+        }
+        else if (choice.choice === 'Delete Verification Method') {
+            await delKeys()
+        }
+        else if (choice.choice === 'Delete Web Service') {
+            await delService()
+        } 
     }
 }
 

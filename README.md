@@ -1,8 +1,8 @@
-# SURI_CLI
+# DID Orbit CLI
 
-SURI CLI is an application that allows users to generate there own sigchain so they may prove there identity on the web in a decentralized manor.
+DID Orbit CLI is an application that allows a user to create and manage a did:orbit identity through an orbitdb database
 
-SURI CLI takes advantage of Orbitdb, a decentralized, serverless, peer-to-peer database.
+DID Orbit CLI takes advantage of Orbitdb, a decentralized, serverless, peer-to-peer database.
 https://orbitdb.org/
 
 ## Dependancies
@@ -11,24 +11,31 @@ Users will need an install of nodejs of version 20 or newer.
 
 ## Usage
 
-To use SURI CLI, users need only clone the repo, from there users will enter 'node index.js' into the command line to run the program
+To use DID Orbit CLI, users need only:
+1. clone this repo
+2. 'npm install' in command line
+3. 'node index.js' in command line to run program
 
 This will do the following:
 - Display Welcome screen
-- Prompt user to input a display name
+- Prompt user to input data to start there new did document
 
-After display name is provided:
+After the information is provided:
 - DID:KEY identity is created for database
-- Initial eldest key sigchain link is generated and inputed into the database
+- Initial eldest key is placed into the did doc as the first verification method
 
-After this first launch of SURI CLI, users will launch the app by appending there display name onto the prior command line input
-Example: 'node index.js displayname'
+From there users will be able to make the following changes to there did doc:
+- add
+- delete
 
-This will open the previously made database 
+Add will provide the following options:
+- Add Social Profile
+- Add Verification Method
+- Add Web Services
 
-From there users will be able to make the following changes to there sigchain:
-- Add social proof
-- Add keys
-- Revoke
+Delete will provide the following options
+- Delete Social Profile
+- Delete Verification Method
+- Delete Web Services
 
 Simply follow the prompts when completing these functions

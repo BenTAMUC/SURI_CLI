@@ -27,6 +27,7 @@
     "inquirer": "^9.2.15",
     "key-did-provider-ed25519": "^4.0.2",
     "key-did-resolver": "^4.0.0",
+    "node-persist": "^4.0.1",
     "orbit-db-identity-provider": "^0.5.0",
     "orbitdb": "^0.0.1-security",
     "prompt-sync": "^4.2.0",
